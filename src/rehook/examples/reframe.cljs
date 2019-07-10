@@ -1,5 +1,5 @@
-(ns rehook.reframe
-  (:require [rehook.state :as rehook]
+(ns rehook.examples.reframe
+  (:require [rehook.core :as rehook]
             [rehook.dom :refer-macros [html]]
             ["react-dom" :as react-dom]))
 

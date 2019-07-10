@@ -1,21 +1,20 @@
-(ns rehook.example
-  (:require
-   [rehook.state :as rehook]
-   [rehook.dom :refer-macros [html]]
-   ["react" :as react]
-   ["react-dom" :as react-dom]))
+(ns rehook.examples.effects
+  (:require [rehook.core :as rehook]
+            [rehook.dom :refer-macros [html]]
+            ["react" :as react]
+            ["react-dom" :as react-dom]))
 
 (defn effect-component []
   (let [[n _] (rehook/use-state (rand-int 100))]
     (rehook/use-effect
      (fn []
-       (prn "Child: this should get called once...")
+       (prn "Child: I should get called once...")
        (constantly nil))
      [])
 
     (rehook/use-effect
      (fn []
-       (prn "Child: this should get called everytime parent gets updated")
+       (prn "Child: I should get called everytime the parent gets updated")
        (constantly nil)))
 
     (rehook/use-effect
@@ -36,7 +35,7 @@
   (let [[curr-tick set-tick] (rehook/use-state 0)]
     (rehook/use-effect
      (fn []
-       (let [ticker (js/setTimeout #(set-tick (inc curr-tick)) 3000)]
+       (let [ticker (js/setTimeout #(set-tick (inc curr-tick)) 1000)]
          #(js/clearTimeout ticker))))
     (html [:div "Tick... " curr-tick])))
 
@@ -46,7 +45,7 @@
         [explosion? detonate]       (rehook/use-state false)]
 
     (rehook/use-effect
-     (fn foo []
+     (fn []
        (prn "Parent: I only get called once...")
        (constantly nil))
      [])

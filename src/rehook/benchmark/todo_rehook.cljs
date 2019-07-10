@@ -1,5 +1,5 @@
 (ns rehook.benchmark.todo-rehook
-  (:require [rehook.state :as state]
+  (:require [rehook.core :as rehook]
             [rehook.dom :refer-macros [html]]
             ["react-dom" :as react-dom]
             [benchmark :as Benchmark]))
@@ -31,7 +31,7 @@
 
 (defn todo-input [props]
   (let [{:keys [title onSave on-stop id class placeholder] :as props} (js->clj props :keywordize-keys true)
-        [val setter] (state/use-state (or title ""))
+        [val setter] (rehook/use-state (or title ""))
         stop #(do (setter "")
                   (if on-stop (on-stop)))
         save #(let [v (-> val str clojure.string/trim)]
@@ -51,7 +51,7 @@
 
 (defn todo-stats [props]
   (let [{:keys [active done]} (js->clj props :keywordize-keys true)
-        [filt set-filt] (state/use-atom-path todo-filter [:filter])]
+        [filt set-filt] (rehook/use-atom-path todo-filter [:filter])]
     (html
      [:div
       [:span#todo-count
@@ -72,7 +72,7 @@
 
 (defn todo-item [props]
   (let [{:keys [id done title]} (js->clj props :keywordize-keys true)
-        [editing setter] (state/use-state false)]
+        [editing setter] (rehook/use-state false)]
     (html
       [:li {:class (str (if done "completed ")
                         (if editing "editing"))}
@@ -87,8 +87,8 @@
                          :on-stop #(setter false)}])])))
 
 (defn todo-app []
-  (let [[filt _]  (state/use-atom-path todo-filter [:filter])
-        [todos _] (state/use-atom todos)
+  (let [[filt _]  (rehook/use-atom-path todo-filter [:filter])
+        [todos _] (rehook/use-atom todos)
         items     (vals todos)
         done      (->> items (filter :done) count)
         active    (- (count items) done)]

@@ -1,9 +1,11 @@
 (ns rehook.benchmark.todo-reagent
-  (:require
-   ["react"]
-   ["react-dom"]
-   [reagent.core :as r]
-   [benchmark :as Benchmark]))
+  "This example code comes from the Reagent project:
+
+   https://github.com/reagent-project/reagent/blob/master/examples/todomvc/src/todomvc/core.cljs"
+  (:require ["react"]
+            ["react-dom"]
+            [reagent.core :as r]
+            [benchmark :as Benchmark]))
 
 (defonce todos (r/atom (sorted-map)))
 

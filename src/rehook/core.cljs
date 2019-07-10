@@ -1,35 +1,35 @@
 (ns rehook.core
-  (:require
-   [rehook.state :as rehook]
-   [rehook.dom :refer-macros [html]]
-   ["react" :as react]
-   ["react-dom" :as react-dom]
-   [reagent.core :as reagent]))
+  (:require ["react" :as react]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Vanilla react (with Hiccup)
+(defn use-state
+  [initial-value]
+  (react/useState initial-value))
 
-(defn rehook-component []
-  (let [[greeting set-greeting] (rehook/use-state "Hello world")]
-    (.error js/console "Greetings from rehook")
-    (html
-     [:div {:on-click #(set-greeting "I clicked the thing...")}
-      greeting])))
+(defn use-effect
+  ([f]
+   (react/useEffect f))
+  ([f deps]
+   (react/useEffect f (to-array deps))))
 
-(react-dom/render
- (html [:> rehook-component {}])
- (.getElementById js/document "rehook"))
+(defn use-atom-fn
+  [a getter-fn setter-fn]
+  (let [[val set-val] (use-state (getter-fn @a))]
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Vanilla reagent
+    (use-effect
+     (fn []
+       (let [id (str (random-uuid))]
+         (add-watch a id (fn [_ _ _ next-state] (set-val (getter-fn next-state))))
+         #(remove-watch a id)))
+     [])
 
-(defn reagent-component []
-  (let [greeting (reagent/atom "Hello world")]
-    (fn []
-      (.error js/console "Greetings from reagent")
-      [:div {:on-click #(reset! greeting "I clicked the thing...")}
-       @greeting])))
+    [val #(swap! a setter-fn val)]))
 
-(reagent/render
- [reagent-component]
- (.getElementById js/document "reagent"))
+(defn use-atom
+  "(use-atom my-atom)"
+  [a]
+  (use-atom-fn a identity (fn [_ v] v)))
+
+(defn use-atom-path
+  "(use-atom my-atom [:path :to :data])"
+  [a path]
+  (use-atom-fn a #(get-in % path) #(assoc-in %1 path %2)))

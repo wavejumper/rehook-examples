@@ -1,4 +1,4 @@
-(ns rehook.todo-rehook
+(ns rehook.benchmark.todo-rehook
   (:require [rehook.state :as state]
             [rehook.dom :refer-macros [html]]
             ["react-dom" :as react-dom]
@@ -51,7 +51,7 @@
 
 (defn todo-stats [props]
   (let [{:keys [active done]} (js->clj props :keywordize-keys true)
-        [filt set-filt] (state/use-atom todo-filter [:filter])]
+        [filt set-filt] (state/use-atom-path todo-filter [:filter])]
     (html
      [:div
       [:span#todo-count
@@ -87,8 +87,8 @@
                          :on-stop #(setter false)}])])))
 
 (defn todo-app []
-  (let [[filt _]  (state/use-atom todo-filter [:filter])
-        [todos _] (state/use-atom todos [])
+  (let [[filt _]  (state/use-atom-path todo-filter [:filter])
+        [todos _] (state/use-atom todos)
         items     (vals todos)
         done      (->> items (filter :done) count)
         active    (- (count items) done)]
@@ -96,7 +96,7 @@
      [:div
       [:section#todoapp
        [:header#header
-        [:h1 "todos"]
+        [:h1 "todos (rehook)"]
         [:> todo-input {:id          "new-todo"
                         :placeholder "What needs to be done?"
                         :on-save     add-todo}]]
@@ -125,7 +125,7 @@
 (doto suite
   (.add "rehook"
         (fn []
-          (react-dom/render (html [:> todo-app {}]) (js/document.getElementById "rehook"))))
+          (react-dom/render (html [:> todo-app {}]) (js/document.getElementById "app"))))
   (.on "cycle"
        (fn [event]
          (.log js/console (str (aget event "target")))))

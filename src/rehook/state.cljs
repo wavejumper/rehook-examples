@@ -3,31 +3,33 @@
 
 (defn use-state
   [initial-value]
-  (array-seq (react/useState initial-value)))
+  (react/useState initial-value))
 
 (defn use-effect
   ([f]
    (react/useEffect f))
   ([f deps]
-   (react/useEffect f (apply array deps))))
+   (react/useEffect f (to-array deps))))
 
-(defn use-atom
-  [a path]
-  (let [[val setter] (use-state (get-in @a path))
-        id (str (random-uuid))]
+(defn use-atom-fn
+  [a getter-fn setter-fn]
+  (let [[val set-val] (use-state (getter-fn @a))]
 
     (use-effect
      (fn []
-       (add-watch a id
-                  (fn [_ _ prev-state next-state]
-                    (when-let [next-state-at-path (get-in next-state path)]
-                      (when (not= (get-in prev-state path) next-state-at-path)
-                        (setter next-state-at-path)))))
-
-       #(remove-watch a id))
-
-     ;; If you want to run an effect and clean it up only once (on mount and unmount),
-     ;; you can pass an empty array ([]) as a second argument
+       (let [id (str (random-uuid))]
+         (add-watch a id (fn [_ _ _ next-state] (set-val (getter-fn next-state))))
+         #(remove-watch a id)))
      [])
 
-    [val #(swap! a assoc-in path %)]))
+    [val #(swap! a setter-fn val)]))
+
+(defn use-atom
+  "(use-atom my-atom)"
+  [a]
+  (use-atom-fn a identity (fn [_ v] v)))
+
+(defn use-atom-path
+  "(use-atom my-atom [:path :to :data])"
+  [a path]
+  (use-atom-fn a #(get-in % path) #(assoc-in %1 path %2)))

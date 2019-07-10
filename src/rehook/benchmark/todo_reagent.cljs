@@ -1,4 +1,4 @@
-(ns rehook.todo-reagent
+(ns rehook.benchmark.todo-reagent
   (:require
    ["react"]
    ["react-dom"]
@@ -87,7 +87,7 @@
         [:div
          [:section#todoapp
           [:header#header
-           [:h1 "todos"]
+           [:h1 "todos (reagent)"]
            [todo-input {:id "new-todo"
                         :placeholder "What needs to be done?"
                         :on-save add-todo}]]
@@ -113,7 +113,7 @@
 (doto suite
   (.add "reagent"
         (fn []
-          (r/render [todo-app] (js/document.getElementById "rehook"))))
+          (r/render [todo-app] (js/document.getElementById "app"))))
   (.on "cycle"
        (fn [event]
          (.log js/console (str (aget event "target")))))

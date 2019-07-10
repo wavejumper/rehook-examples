@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>React Hooks</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Cljs + React Hooks
+
+https://github.com/wavejumper/rehook
+---
+
+# History lesson
+
+```clojure
+(defprotocol ReactLifecycle
+  (component-did-mount [this])
+  (component-did-update [this prev-props prev-state snapshot])
+  (component-will-unmount [this])
+  (should-component-update [this next-props next-state])
+  (component-did-mount [this])
+  (component-will-receive-props [this next-props])
+  (component-will-update [this next-state])
+  (render [this]))
+
+;; methods called from within your component
+(defprotocol ReactComponent
+  (set-state [this updater callback])
+  (force-update [this])
+  (props [this])
+  (state [this]))
+```
+
+---
+
+# State in React (originally)
+
+* React intended as the V in 'MVC'
+* OO-design
+* With mutable state, `should-component-update` becomes a tricky question...
+* Flux application architecture an early solution for managing state
+
+---
+
+# State in cljs+React (originally)
+
+* Clojure community saw how React could be used to leverage functional programming paradigms
+* Leveraged Clojure's persistent data structures + notion of state
+* Leveraged React's virtual DOM to provide an efficient means to re-render between state changes
+* If data is immutable, re-rendering is as simple as a diff between states
+* `ui = f(state)`
+
+---
+
+# State in cljs (early implementations)
+
+* Om classic: cursors 
+  * Global app state as atom, cursor is a path to some state (`transact!`, `update!` etc)
+
+* Reagent: ratoms 
+  * Implementation of Clojure's atom to trigger re-renders of components based on state change
+
+---
+
+# React functional components (JS)
+
+* 90% of the time you don't need the overhead/complexity of lifecycles, local state
+* The `render` method in the component lifecycle
+* State management handled by external libraries (redux/etc)
+
+---
+
+# What is React hooks?
+
+* Native API for dealing with state in functional components
+* Two fns in the API that are relevant to cljs: `useState` and `useEffect`
+
+---
+
+# Use state
+
+* `use-state(initial-value) -> [current-value, setter-fn]`
+* Can only be declared at the top level of a component (and not within conditionals, for loops, etc) 
+* useState == Reagent's ratoms?
+
+```clojure
+;; Reagent
+(defn component []
+  ;; Declared at the top-level, closed over the component requiring state
+  (let [name (reagent.core/atom "Todd")
+    (fn [] 
+      [:div {:on-click #(reset! name "Cindy")} "Hello " @name])))
+
+;; Hooks
+(defn component []
+  ;; Declared at the top-level of a component
+  (let [[name set-name] (React/useState "Todd")
+    [:div {:on-click #(set-name "Cindy")} "Hello " name]))
+```
+
+---
+
+# Use Effect
+
+* `use-effect(effect-fn)`
+* Imperative escape hatch
+* Can only be declared at the top level of a component (and not within conditionals, for loops, etc) 
+* Called after initial render (`component-did-mount`)
+* Optional return fn called on unmount (`component-will-unmount`)
+
+```
+(defn tick []
+  (let [[curr-tick set-tick] (React/useState 0)]
+    (React/useEffect 
+      (fn []
+        (let [ticker (js/setTimeout #(set-tick (inc curr-tick)) 3000)]
+          #(js/clearTimeout ticker))))
+
+    [:div "Tick... " curr-tick]))
+```
+
+---
+
+# Use Effect
+
+* Optionally takes a second argument, which is a collection of dependencies
+* Effect will be called if value of dependencies change after each render
+* Crude, and uses javascript equality to detect dependency changes :(
+
+```
+(defn tick []
+  (let [[curr-name set-name] (React/useState curr-name)]
+    (React/useEffect 
+      (fn []
+        (.log js/console "Name changed to:" curr-name)
+        #(.log js/console "Unmounting"))
+      [curr-name])
+
+    [:div "Hello... " curr-name]))
+```
+
+---
+
+# So... Javascript has Reagent?
+
+## Why even cljs?
+
+* Persistent data structures + `clojure.core` api for using them
+* State management (in the form of atoms)
+* Rich tooling/compiler/etc (shadow-cljs, figwheel main)
+* Hiccup templating
+
+---
+
+# Functions, the ultimate abstraction?
+
+* A functional interface to React's class-based design was non-trivial
+  * Reagent's implementation of ratoms, components, etc
+
+* While React's implementation (under the hood) of hooks is probably complex, the functional API it exposes allows Cljs developers the ability to implement Reagent (or re-frame) trivially 
+
+* Hooks can be a composable building block for higher level abstractions for state management
+  * React provides `useReducer` for redux style dispatch + many others...
+
+---
+
+# Functions, the ultimate abstraction?
+
+* Hooks API is crude, but mind-blowingly simple, it's staggering it took so long to reach this point
+
+* The simplicity has me reflecting on whether you need a more sophisticated architecture to deal with state management
+
+* Can we simply use React directly from Cljs, or do we an abstraction on the abstraction?
+
+---
+
+# Hooks in Cljs (prior art)
+
+* hx
+  * Has its own Hiccup implementation
+  * Some smarts in how it wraps React, (`useValue`, `useState`) but possibly overkill?
+  * Relies to heavily on other React state management constructs (useContext, useReducer) - where Cljs has a better answer to state management.
+  * Syntactic sugar of defcomponent macro unnecessary, just use a fn (imo)
+
+* uix
+  * Atom as an interface on top of `useState` wrong/unnecessary abstraction
+
+---
+
+# Om classic -> hooks migration (goals)
+
+* Track as close to React as possible
+* Try to avoid writing yet another library
+* Only add abstractions where they are needed (ratoms)
+* Try to do it in 30 lines or less
+* Keep same fundamental abstractions as before (avoid complete rewrite)
+  * Hiccup
+  * Global app state
+
+---
+
+# Before and after...
+
+---
+
+Om classic
+
+```clojure
+(defn modal [{:keys [eid admin visible? page om/next user]} owner]
+  (reify
+    om/IInitState
+    (init-state [_] {:event nil})
+
+    om/IDidMount
+    (did-mount [_]
+      (let [{:keys [dispatch-event]} (next/get-computed owner)]
+        (om/set-state! owner :event
+                       (ev/listen js/window goog.events.EventType.KEYDOWN
+                                  (fn [e]
+                                    (when (= 27 (.-keyCode e))
+                                      (dispatch-event [:admin/close-modal])))))))
+
+    om/IWillUnmount
+    (will-unmount [_]
+      (when-let [{:keys [event]} (om/get-state owner)]
+        (ev/unlistenByKey event)))
+
+    om/IRender
+    (render [_]
+      (let [{:keys [ident errors comment?] :as form} (get-in admin [:forms eid])]
+        (bs/modal {:header        ....
+                   :visible?      visible?
+                   :close-button? false}
+      ...)
+```
+
+---
+
+Hooks
+
+```clojure
+(defn modal [props]
+  (let [{:keys [eid visible?]} (dom/props props) ;; Things that are genuine props
+        admin (db/admin) ;; A 'sub' that need to access data from global app state
+        {:keys [ident errors comment?] :as form} (get-in admin [:forms eid])]
+
+    (rehook/use-effect ;; Previously lifecycle events
+     (fn []
+       (let [ev (ev/listen js/window goog.events.EventType.KEYDOWN
+                           (fn [e]
+                             (when (= 27 (.-keyCode e))
+                               ;; `dispatch-event` becomes a 'global'
+                               (dispatch-event [:admin/close-modal]))))]
+         #(ev/unlistenByKey ev)))
+     [])
+
+    (html
+     (el-> bs/modal ;; el-> a fn that wraps react/createElement
+           ;; Props a js obj, with "props" key used by `dom/props` call
+           #js {"props" {:header        ...
+                         :visible?      visible?
+                         :close-button? false}}
+      ...)
+```
+
+---
+
+# Demo :)
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>

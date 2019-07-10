@@ -124,7 +124,7 @@ https://github.com/wavejumper/rehook
 * Called after initial render (`component-did-mount`)
 * Optional return fn called on unmount (`component-will-unmount`)
 
-```
+```clojure
 (defn tick []
   (let [[curr-tick set-tick] (React/useState 0)]
     (React/useEffect 
@@ -143,8 +143,8 @@ https://github.com/wavejumper/rehook
 * Effect will be called if value of dependencies change after each render
 * Crude, and uses javascript equality to detect dependency changes :(
 
-```
-(defn tick []
+```clojure
+(defn hello-world []
   (let [[curr-name set-name] (React/useState curr-name)]
     (React/useEffect 
       (fn []
@@ -175,7 +175,7 @@ https://github.com/wavejumper/rehook
 
 * While React's implementation (under the hood) of hooks is probably complex, the functional API it exposes allows Cljs developers the ability to implement Reagent (or re-frame) trivially 
 
-* Hooks can be a composable building block for higher level abstractions for state management
+* Hooks can be a composable building block for higher level abstractions
   * React provides `useReducer` for redux style dispatch + many others...
 
 ---
@@ -186,7 +186,7 @@ https://github.com/wavejumper/rehook
 
 * The simplicity has me reflecting on whether you need a more sophisticated architecture to deal with state management
 
-* Can we simply use React directly from Cljs, or do we an abstraction on the abstraction?
+* Can we simply use React directly from Cljs, or do we need an abstraction on the abstraction?
 
 ---
 
@@ -195,7 +195,7 @@ https://github.com/wavejumper/rehook
 * hx
   * Has its own Hiccup implementation
   * Some smarts in how it wraps React, (`useValue`, `useState`) but possibly overkill?
-  * Relies to heavily on other React state management constructs (useContext, useReducer) - where Cljs has a better answer to state management.
+  * Relies heavily on other React state management constructs (`useContext`, `useReducer`) - where Cljs has a better answer to state management.
   * Syntactic sugar of defcomponent macro unnecessary, just use a fn (imo)
 
 * uix

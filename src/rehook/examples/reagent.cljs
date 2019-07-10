@@ -9,7 +9,7 @@
 ;; Vanilla react (with Hiccup)
 
 (defn rehook-component []
-  (let [[greeting set-greeting] (rehook/use-state "Hello world")]
+  (let [[greeting set-greeting] (rehook/use-state "Hello from rehook")]
     (.error js/console "Greetings from rehook")
     (html
      [:div {:on-click #(set-greeting "I clicked the thing...")}
@@ -23,7 +23,7 @@
 ;; Vanilla reagent
 
 (defn reagent-component []
-  (let [greeting (reagent/atom "Hello world")]
+  (let [greeting (reagent/atom "Hello from reagent")]
     (fn []
       (.error js/console "Greetings from reagent")
       [:div {:on-click #(reset! greeting "I clicked the thing...")}

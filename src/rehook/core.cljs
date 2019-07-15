@@ -22,7 +22,7 @@
          #(remove-watch a id)))
      [])
 
-    [val #(swap! a setter-fn val)]))
+    [val #(swap! a setter-fn %)]))
 
 (defn use-atom
   "(use-atom my-atom)"

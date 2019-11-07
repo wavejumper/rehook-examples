@@ -2,6 +2,7 @@
         org.clojure/clojurescript {:mvn/version "1.10.520"}
         re-frame {:mvn/version "0.10.7"}
         hicada {:mvn/version "0.1.8"}
+        wavejumper/rehook-dom {:mvn/version "1.1.5"}
         reagent {:mvn/version "0.8.1"
                  :exclusions [cljsjs/react
                               cljsjs/react-dom

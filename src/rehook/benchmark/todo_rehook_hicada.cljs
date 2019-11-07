@@ -1,6 +1,6 @@
-(ns rehook.benchmark.todo-rehook
+(ns rehook.benchmark.todo-rehook-hicada
   (:require [rehook.core :as rehook]
-            [rehook.dom :refer-macros [html]]
+            [rehook.hicada :refer-macros [html]]
             ["react-dom" :as react-dom]
             [benchmark :as Benchmark]))
 
@@ -123,12 +123,10 @@
 (def suite (Benchmark/Suite.))
 
 (doto suite
-  (.add "rehook"
+  (.add "rehook-hicada"
         (fn []
           (react-dom/render (html [:> todo-app {}]) (js/document.getElementById "app"))))
   (.on "cycle"
        (fn [event]
          (.log js/console (str (aget event "target")))))
   (.run #js {:async true}))
-
-

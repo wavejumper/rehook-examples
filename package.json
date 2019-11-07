@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@material-ui/core": "^4.2.0",
+    "@material-ui/icons": "^4.2.1",
     "benchmark": "^2.1.4",
     "create-react-class": "^15.6.3",
     "global": "^4.4.0",

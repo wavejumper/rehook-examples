@@ -1,6 +1,6 @@
 (ns rehook.examples.reframe
   (:require [rehook.core :as rehook]
-            [rehook.dom :refer-macros [html]]
+            [rehook.hicada :refer-macros [html]]
             ["react-dom" :as react-dom]))
 
 ;; ============================================================================
@@ -58,6 +58,5 @@
       [:pre (.stringify js/JSON (clj->js messages) nil 2)]])))
 
 (react-dom/render
- (react-dom/render
-  (html [:> reframe-component {}])
-  (.getElementById js/document "rehook")))
+ (html [:> reframe-component {}])
+ (.getElementById js/document "rehook"))

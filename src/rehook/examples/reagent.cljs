@@ -1,6 +1,6 @@
 (ns rehook.examples.reagent
   (:require [rehook.core :as rehook]
-            [rehook.dom :refer-macros [html]]
+            [rehook.hicada :refer-macros [html]]
             ["react" :as react]
             ["react-dom" :as react-dom]
             [reagent.core :as reagent]))

@@ -1,4 +1,4 @@
-(ns rehook.dom
+(ns rehook.hicada
   #?(:clj  (:require [hicada.compiler])
      :cljs (:require ["react" :as react])))
 
@@ -7,7 +7,7 @@
 
 (defmacro html
   [body]
-  (hicada.compiler/compile body {:create-element  'rehook.dom/create-element
+  (hicada.compiler/compile body {:create-element  'rehook.hicada/create-element
                                  :transform-fn    (comp)
                                  :array-children? false}
                            {} &env))
